@@ -1,5 +1,7 @@
 # GigaGigus - Gigaverse Combat Calculator
 
+![GigaGigus Calculator - Basic View](docs/gigagigus_gui_1.png)
+
 A PyQt5-based calculator tool for determining optimal combat moves in [Gigaverse](https://glhfers.gitbook.io/gigaverse/combat/dungetron-overview/dungetron-5000-normal)'s Dungetron 5000 combat system.
 
 ## About Gigaverse
@@ -73,6 +75,8 @@ python gui.py
    - Click "Calculate Best Move"
    - View the optimal skill and its expected value
    - Review detailed breakdown of all possible outcomes
+
+![GigaGigus Calculator - Detailed Breakdown](docs/gigagigus_gui_2.png)
 
 ## Combat Mechanics
 
