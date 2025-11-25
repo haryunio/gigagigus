@@ -108,13 +108,26 @@ class MainWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("GigaGigus - Combat Calculator")
+        
+        # Fixed window dimensions
+        self.FIXED_WIDTH = 800
+        self.COLLAPSED_HEIGHT = 380
+        self.EXPANDED_HEIGHT = 650
+        
+        # Disable resizing
+        self.setFixedSize(self.FIXED_WIDTH, self.COLLAPSED_HEIGHT)
 
         main_layout = QtWidgets.QVBoxLayout()
         
-        # Character inputs side by side
+        # Character inputs side by side - with fixed size policy
         chars_layout = QtWidgets.QHBoxLayout()
         self.my_input = CharacterInput("My Stats")
         self.enemy_input = CharacterInput("Enemy Stats")
+        
+        # Prevent the character inputs from shrinking
+        self.my_input.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        self.enemy_input.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        
         chars_layout.addWidget(self.my_input)
         chars_layout.addWidget(self.enemy_input)
         
@@ -123,6 +136,12 @@ class MainWindow(QtWidgets.QWidget):
         # Button and result
         self.button = QtWidgets.QPushButton("Calculate Best Move")
         self.button.clicked.connect(self.calculate)
+        self.button.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        
+        main_layout.addWidget(self.button)
+        
+        # Result label with checkbox
+        result_layout = QtWidgets.QHBoxLayout()
         
         self.result_label = QtWidgets.QLabel("Result")
         self.result_label.setAlignment(QtCore.Qt.AlignCenter)
@@ -130,38 +149,40 @@ class MainWindow(QtWidgets.QWidget):
         font.setPointSize(12)
         font.setBold(True)
         self.result_label.setFont(font)
+        self.result_label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         
-        main_layout.addWidget(self.button)
-        main_layout.addWidget(self.result_label)
+        self.show_breakdown_checkbox = QtWidgets.QCheckBox("Show Breakdown")
+        self.show_breakdown_checkbox.setChecked(False)
+        self.show_breakdown_checkbox.toggled.connect(self.on_breakdown_toggled)
+        self.show_breakdown_checkbox.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         
-        # Collapsible details section
-        self.details_group = QtWidgets.QGroupBox("Detailed Breakdown")
-        self.details_group.setCheckable(True)
-        self.details_group.setChecked(False)  # Initially collapsed
-        self.details_group.toggled.connect(self.on_details_toggled)
+        result_layout.addStretch()
+        result_layout.addWidget(self.result_label)
+        result_layout.addWidget(self.show_breakdown_checkbox)
+        result_layout.addStretch()
         
-        details_layout = QtWidgets.QVBoxLayout()
+        main_layout.addLayout(result_layout)
+        
+        # Details section (simple text edit, hidden initially)
         self.detail_text = QtWidgets.QTextEdit()
         self.detail_text.setReadOnly(True)
         self.detail_text.setPlaceholderText("Detailed breakdown will appear here...")
-        self.detail_text.setMinimumHeight(250)
-        details_layout.addWidget(self.detail_text)
+        self.detail_text.setFixedHeight(250)
+        self.detail_text.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.detail_text.setVisible(False)
         
-        self.details_group.setLayout(details_layout)
-        self.details_group.setVisible(False)  # Hidden initially
-        
-        main_layout.addWidget(self.details_group)
+        main_layout.addWidget(self.detail_text)
 
         self.setLayout(main_layout)
     
-    def on_details_toggled(self, checked):
-        """Handle the details section toggle"""
+    def on_breakdown_toggled(self, checked):
+        """Handle the breakdown checkbox toggle"""
+        self.detail_text.setVisible(checked)
+        # Switch between two fixed heights
         if checked:
-            self.details_group.setVisible(True)
-            self.adjustSize()
+            self.setFixedSize(self.FIXED_WIDTH, self.EXPANDED_HEIGHT)
         else:
-            self.details_group.setVisible(False)
-            self.adjustSize()
+            self.setFixedSize(self.FIXED_WIDTH, self.COLLAPSED_HEIGHT)
 
     def calculate(self):
         me = self.my_input.get_character()
@@ -172,10 +193,6 @@ class MainWindow(QtWidgets.QWidget):
         
         # Generate detailed breakdown
         self.show_detailed_breakdown(me, enemy, best)
-        
-        # Auto-expand details section after calculation
-        if not self.details_group.isChecked():
-            self.details_group.setChecked(True)
     
     def show_detailed_breakdown(self, my_char: Character, enemy_char: Character, my_skill: Skill):
         """Show detailed breakdown of all possible outcomes for the best skill"""
@@ -279,6 +296,5 @@ class MainWindow(QtWidgets.QWidget):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     w = MainWindow()
-    w.resize(800, 450)  # Smaller initial size
     w.show()
     sys.exit(app.exec_())
